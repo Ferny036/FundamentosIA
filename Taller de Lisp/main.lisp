@@ -31,11 +31,11 @@
 ;; FIRST, REST y LAST de Nil se define como Nil
 
 ;; Predicados de igualdad
-(eq a b)            ;; Mas especifico - Mas exigente - a y b existen en la misma direccion de memoria
-(eql a b)          ;; a y b son iguales, el mismo tipo y mismo valor (atomos)
-(equal a b)      ;; a y b son iguales, si son isomorfos (estructuras y listas)
-(= a b)              ;; Similar a "equal", pero solo admite valores numericos
-(equalp a b)    ;; Mas general - Menos exigentes - a y b son iguales en algun sentido de valor asociado
+(eq a b)       ;; Mas especifico - Mas exigente - a y b existen en la misma direccion de memoria
+(eql a b)      ;; a y b son iguales, el mismo tipo y mismo valor (atomos)
+(equal a b)    ;; a y b son iguales, si son isomorfos (estructuras y listas)
+(= a b)        ;; Similar a "equal", pero solo admite valores numericos
+(equalp a b)   ;; Mas general - Menos exigentes - a y b son iguales en algun sentido de valor asociado
 
 ;; Asociacion
 (set '<variable> <valor>)           ;; Solo asocia 1 valor a 1 variable
