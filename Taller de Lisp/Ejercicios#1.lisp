@@ -1,4 +1,4 @@
-;Ejercicios 
+;Ejercicios
 ; 1.a .- Obtener el 5to elemento de la lista
 (set 'X '(((1 2) 3) 4 (5 (6)) A (B C) D (E (F G))))
 (nth 4 X)
@@ -8,8 +8,8 @@
 (* 366 24 60 60)
 ; => 31622400
 
-;1.c .- Verificar si x != 0 & x<=y 
-(AND (NOT (= x 0)) (OR (< x y) (= x y)))
+;1.c .- Verificar si x != 0 & x<=y
+(AND (/= x 0) (<= x y))
 
 ;1.d .- Lista con la solucion a
 ; 2x2 + 7x + 5 = 0
@@ -17,15 +17,15 @@
 (/ (- (sqrt (- (expt 7 2) (* 4 2 5))) -7) (* 2 2)))
 ; => (-1.0 2.5)
 
-; 2.a 
+; 2.a
 (+ (* 2 4) (- 6 8))
 ; => 6
 
 ;2.b
 (/ (+ 5 (- 4 3)) (+ 6 (/ 2 5)))
-; => 15/16 
+; => 15/16
 
-; 2.c 
+; 2.c
 (sqrt (/ (- 1.4502 (- -4 (/ 3 8))) (expt -1 (expt (- 3 5) (/ 1 3)))))
 ; => #C(7.355944 -11.196843)
 
@@ -72,9 +72,9 @@
 ;4 .- Recibir como parametro  ((A . x) (B . y) (C . z))
 ; retornar (((x y) . A) ((y z) . C) ((z y x) . B))
 (defun Recombina (lista)
-  (list 
-    (cons (list (cdr (first lista)) (cdr (second lista))) (car (first lista))) 
-    (cons (list (cdr (second lista)) (cdr (third lista))) (car (third lista))) 
+  (list
+    (cons (list (cdr (first lista)) (cdr (second lista))) (car (first lista)))
+    (cons (list (cdr (second lista)) (cdr (third lista))) (car (third lista)))
     (cons (list (cdr (third lista)) (cdr (second lista)) (cdr (first lista))) (car (second lista)))))
 
 (set 'args (list (cons 'A 0) (cons 'B 1) (cons 'C 3)))
@@ -93,7 +93,7 @@
 ; Retorna los valores de validacion (T, NIL)
 (defun Analiza (X)
   (list (atom X) (numberp X) (listp X) (consp X) (eq () X)))
-  
+
 (analiza ()) ; => (T NIL T NIL)
 (analiza 5.6784) ; => (T T NIL NIL NIL)
 (analiza (list (cons 'A 0) (cons 'B 1) (cons 'C 3))) ; => (NIL NIL T T NIL)
@@ -102,10 +102,10 @@
 ; Retorna una lista con los elementos intercalados
 (defun Intercala (A B)
   (set 'C ())
-  (loop 
-  (if (NOT (eql (first A) NIL))
+  (loop
+  (if (null (first A))
     (push (pop A) C))
-  (if (NOT (eql (first B) NIL))
+  (if (null (first B))
     (push (pop B) C))
   (when (AND (eql (first A) NIL) (eql (first B) NIL)) (return C)))
   (reverse C))
@@ -126,7 +126,7 @@
 (mismoTipo '(0.52 A '(C B A D)) '(P 0.6718 '(P O P)))       ; => NIL
 
 ;9 .- Comprueba si un string es un palindromo comparando entre mayusculas y minusculas
-; Retorna T en caso de que sea un 
+; Retorna T en caso de que sea un
 (defun APalindromo (str)
     (set 'strwitoutspaces (remove #\Space str))
     (string= strwitoutspaces (reverse strwitoutspaces)))
