@@ -83,11 +83,10 @@
 
 ;5 .- Recibir un numero
 ; Retornar si es un numero real y diferente de cero
-(defun RealNoCero (N)
-  (AND (/= N 0.0) (realp N)))
-(Realnocero 1.5)     ; => T
-(Realnocero 5)       ; => T
-(Realnocero #C(1 5)) ; => NIL
+
+(AND (/= #C(1 5) 0.0) (realp #C(1 5))); => NIL
+(AND (/= 1.5 0.0) (realp 1.5))        ; => T
+(AND (/= 5 0.0) (realp 5))            ; => T
 
 ;6 .- Analiza si es un atomo, numero, lista, celda o lista vacia
 ; Retorna los valores de validacion (T, NIL)
@@ -117,9 +116,10 @@
 ;8 .- Comprueba si los elementos de 2 listas son del mismo tipo
 ; Retorna T si todos sus elementos son del mismo tipo, NIL en caso contrario
 (defun mismoTipo (listaA listaB)
-  (if (AND (equal (first listaA) NIL) (equal (first listaB) NIL))
-    T
-    (AND (equal (type-of (pop listaA)) (type-of (pop listaB))) (mismoTipo listaA listaB))))
+  (let ((bandera T))
+    (loop for x in listaA for y in listaB do  
+      (if  (NOT (equal (type-of x) (type-of y))) (setq bandera NIL)))
+      bandera))
 
 (mismoTipo '(A 0.52 '(C B A D)) '(P 0.6718 '(P O P)))       ; => T
 (mismoTipo '(A 0 (cons 'F (C B A D))) '(P 0.6718 '(P O P))) ; => NIL
@@ -136,7 +136,4 @@
 (apalindromo "HolaaloH")           ;=> T
 
 ;10 .- Indica si un año es bisiesto o no
-(defun Bisiesto (year)
-  (if (integerp year)
-    (= 0 (mod year 4))
-    (print "Solo se pueden calcular numeros enteros")))
+(= 0 (mod year 4))

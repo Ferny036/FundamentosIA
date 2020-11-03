@@ -72,8 +72,8 @@
 		(loop named original when (null lista) return acum do 
 			(loop named copy do
 				(setf elem (pop lista))
-			(cond	((listp elem) (return-from copy T))
-						(T (setq acum (nconc acum (list elem))))))
+				(cond	((listp elem) (return-from copy T))
+							(T (setq acum (nconc acum (list elem))))))
 			(dolist (sub-elem elem) (setq lista (nconc lista (list sub-elem)))))))
 
 ; Devuelve los elementos ordenados de acuerdo al nivel en el que se encontraban
@@ -84,13 +84,13 @@
 ; 8 .- Contiene m sublistas de m elementos, devolver una lista de los elementos de la diagonal de la matriz
 (defun diagonal (matriz)
 	(let ((acum ()))
-		(loop for i from 0 below (array-dimension matriz 0)
-			do (push (aref matriz i i) acum))
+		(loop for i from 0 below (length matriz)
+			do (push (nth i (nth i matriz)) acum))
 		(reverse acum)))
 
-(diagonal #2A((1 2) (3 4))); => (1 4)
-(diagonal #2A((1 0 0 0 0) (0 1 0 0 0) (0 0 1 0 0) (0 0 0 1 0) (0 0 0 0 1))) ; (1 1 1 1 1)
-(diagonal (make-array '(10 10) :initial-element (random 10))) ; (6 6 6 6 6 6 6 6 6 6)
+(diagonal '((1 2) (3 4))); => (1 4)
+(diagonal '((1 0 0 0 0) (0 1 0 0 0) (0 0 1 0 0) (0 0 0 1 0) (0 0 0 0 1))) ; (1 1 1 1 1)
+(diagonal '()) ; (1 2 3 4 5 6)
 
 ; 9 .- Devuelve una lista de misma longitud, agregando A si es un atomo, L si es una lista y N si es un numero
 ; en su lugar correspondiente
@@ -124,13 +124,15 @@
 
 ; 14 .- Construir una funcion con aridad indeterminada que implemente el operador logico de la implicacion logica
 (defun implica (&rest p)
-	(cond	((< (length p) 2) (print "Dos argumentos como minimo"))
-				(T (let ((anterior T) (bandera T)) 
-					(loop initially (setq anterior (pop p)) for actual in p do
-						(setq anterior (OR (NOT anterior) actual))
-						(setq bandera (equal (first p) actual)))
-					(cond	((AND bandera (null (first p))) (NOT anterior))
-								(T anterior))))))
+	(cond
+		((< (length p) 2) (print "Dos argumentos como minimo"))
+		(T (let ((anterior T) (bandera T)) 
+			(loop initially (setq anterior (pop p)) for actual in p do
+				(setq anterior (OR (NOT anterior) actual))
+				(setq bandera (equal (first p) actual)))
+			(cond	
+				((AND bandera (null (first p))) (NOT anterior))
+				(T anterior))))))
 
 (implica T T)
 (implica )
@@ -152,14 +154,14 @@
 		(loop for _ below (length A) do (push () C))
 		(setq B (transpuesta B))
 		(cond	((/=  (length (car A)) (length (car B))) (print "No se pueden multiplicar las matrices"))
-					(T 
-						(loop for row-a in A for i below (length A) do 
-							(loop for row-b in B do
-								(loop for kA in row-a for kB in row-b do 
-									(setq temp (+ temp (* kA kB))))
-								(cond ((null (nth i C)) (push temp (nth i C)))
-											(T (push temp (cdr (last (nth i C))))))
-								(setq temp 0)))))C))
+			(T 
+				(loop for row-a in A for i below (length A) do 
+					(loop for row-b in B do
+						(loop for kA in row-a for kB in row-b do 
+							(setq temp (+ temp (* kA kB))))
+						(cond ((null (nth i C)) (push temp (nth i C)))
+									(T (push temp (cdr (last (nth i C))))))
+						(setq temp 0)))))C))
 
 (mult '((1 2)) '((3 4 5) (6 7 8))) ; => ((15 18 21))
 (mult '((1 2 3) (4 5 6)) '((5 -1) (1 0) (-2 3))) ; => ((1 8) (13 14))
