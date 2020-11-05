@@ -1,3 +1,14 @@
+#|
+    CENTRO DE INVESTIGACION EN COMPUTACION
+    ESCUELA SUPERIOR DE COMPUTO
+    SEMESTRE B-20
+
+ALUMNO: FERNANDO DANIEL RIVERA PAREDES
+  FUNDAMENTOS DE INTELIGENCIA ARTIFICIAL
+PROF.: DR. SALVADOR GODOY CALDERON
+
+|#
+
 ; 1 .- Determinar si un elemento esta en la posicion indicada de una lista
 ; Retorna T si se encuentra ese elemento, NIL caso contrario
 (defun ElemInPos (elem lista pos)
