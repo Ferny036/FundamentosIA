@@ -1,37 +1,19 @@
 ; Nodo: (id estado ancestro operador)
-; Estado: (<Roca1> <Roca2> <Roca3> <Roca4> <Roca5> <Roca6> <Roca7>)
+;           L O L B   L O L B
+; Estado: ((1 1 1 1) (0 0 0 0))
 
-(defstruct rana color)
-(defparameter *open* '())
-(defparameter *memory* '())
+(defparameter  *open* '())    ;; Frontera de busqueda...                                              
+(defparameter  *memory* '())  ;; Memoria de intentos previos
 
-(defparameter *ops* '(
-  (:Mover-Rana-Una-Posicion-En-Roca-1     (0 1))
-  (:Mover-Rana-Una-Posicion-En-Roca-2     (1 1))
-  (:Mover-Rana-Una-Posicion-En-Roca-3     (2 1))
-  (:Mover-Rana-Una-Posicion-En-Roca-4     (3 1))
-  (:Mover-Rana-Una-Posicion-En-Roca-5     (4 1))
-  (:Mover-Rana-Una-Posicion-En-Roca-6     (5 1))
-  (:Mover-Rana-Una-Posicion-En-Roca-7     (6 1))
-  (:Mover-Rana-Dos-Posiciones-En-Roca-1   (0 2))
-  (:Mover-Rana-Dos-Posiciones-En-Roca-2   (1 2))
-  (:Mover-Rana-Dos-Posiciones-En-Roca-3   (2 2))
-  (:Mover-Rana-Dos-Posiciones-En-Roca-4   (3 2))
-  (:Mover-Rana-Dos-Posiciones-En-Roca-5   (4 2))
-  (:Mover-Rana-Dos-Posiciones-En-Roca-6   (5 2))
-  (:Mover-Rana-Dos-Posiciones-En-Roca-7   (6 2))
-  (:Mover-Rana-Tres-Posiciones-En-Roca-1  (0 3))
-  (:Mover-Rana-Tres-Posiciones-En-Roca-2  (1 3))
-  (:Mover-Rana-Tres-Posiciones-En-Roca-3  (2 3))
-  (:Mover-Rana-Tres-Posiciones-En-Roca-4  (3 3))
-  (:Mover-Rana-Tres-Posiciones-En-Roca-5  (4 3))
-  (:Mover-Rana-Tres-Posiciones-En-Roca-6  (5 3))
-  (:Mover-Rana-Tres-Posiciones-En-Roca-7  (6 3))
-  ))
+(defparameter  *ops*  '(
+  (:No-Llevar-a-Nadie  (0 0 0))
+  (:Llevar-Lobo        (1 0 0))
+  (:Llevar-Oveja       (0 1 0))
+  (:Llevar-Legumbre    (0 0 1))))
 
-(defparameter *current-ancestor* NIL)
-(defparameter *id* 0)
-(defparameter *solucion* NIL)
+(defparameter  *id* 0)  ;; Identificador del ultimo nodo creado
+(defparameter  *current-ancestor*  nil)  ;;Id del ancestro común a todos los descendientes que se generen
+(defparameter  *solucion*  nil) 
 
 (defun create-node (estado op)
   (incf *id*)
@@ -48,71 +30,89 @@
 (defun get-from-open ()
   (pop *open*))
 
-; Filtros
-; Filtro de validacion de operadores
+(defun  barge-shore (estado)
+    (if  (= 1 (fourth (first  estado)))  0  1))
+
 (defun valid-operator? (op estado)
   (let* (
-    (saltos (second (second op)))
-    (roca (first (second op)))
-    (rana-actual (nth roca estado)))
+    (orilla (barge-shore  estado))
+    (lobo (first (nth orilla estado)))
+    (oveja (second (nth orilla estado)))
+    (legumbre (third (nth orilla estado))))
 
     (and 
-      (rana-p rana-actual)
-      (if (equal :Verde (rana-color rana-actual)) 
-        (>= (- roca saltos) 0) 
-        (<= (+ roca saltos) 6)))))
+      (>= lobo (first (second op)))
+      (>= oveja (second (second op)))
+      (>= legumbre (third (second op))))))
+
+(defun flip (bit)  
+  (boole  BOOLE-XOR  bit  1))
 
 ; Filtro de validacion de estado
 (defun valid-state? (estado)
-  (let ((num-ranas (loop for x-rana in estado count (rana-p x-rana))))
-    (= num-ranas 6)))
+  (let* (
+    (orilla (flip (barge-shore estado)))
+    (p-lobo (= 1 (first (nth orilla estado))))
+    (p-oveja (= 1 (second (nth orilla estado))))
+    (p-legumbre (= 1 (third (nth orilla estado)))))
 
-(defun roca-final (roca-actual saltos color)
-  (if (equal color :Verde) (- roca-actual saltos) (+ roca-actual saltos)))
+    (not (and p-oveja (not (equal p-lobo p-legumbre))))))
 
 (defun apply-operator (op estado)
-  (let* (
-    (saltos (second (second op)))
-    (roca (first (second op)))
-    (rana-actual (nth roca estado))
-    (color (rana-color rana-actual))
-    (roca-a-mover (roca-final roca saltos color))
-    (nuevo-estado (loop for x in estado collect x)))
-
-    (setf (nth roca-a-mover nuevo-estado) rana-actual)
-    (setf (nth roca nuevo-estado) NIL)
-    nuevo-estado))
+  (let* ( 
+    (lo0 (first (first estado)))
+    (lo1 (first (second estado)))
+    (o0 (second (first estado)))
+    (o1 (second (second estado)))
+    (le0 (third (first estado)))
+    (le1 (third (second estado)))
+    (b0 (fourth (first estado)))
+    (b1 (fourth (second estado)))
+    (orilla-barca  (barge-shore estado)) 
+    (operador (first op)))
+    
+    (case operador
+      (:No-Llevar-a-Nadie 
+        (if (= 0 orilla-barca) 
+          (list  (list  lo0 o0 le0 (flip b0))   (list  lo1 o1 le1 (flip b1))) 
+          (list  (list  lo0 o0 le0 (flip b0))   (list  lo1 o1 le1 (flip b1))))) 
+      (:Llevar-Lobo 
+        (if (= 0 orilla-barca) 
+          (list  (list  (- lo0 1) o0 le0 (flip b0))   (list  (+ lo1 1) o1 le1 (flip b1))) 
+          (list  (list  (+ lo0 1) o0 le0 (flip b0))   (list  (- lo1 1) o1 le1 (flip b1))))) 
+      (:Llevar-Oveja
+        (if (= 0 orilla-barca) 
+          (list  (list  lo0 (- o0 1) le0 (flip b0))   (list  lo1 (+ o1 1) le1 (flip b1))) 
+          (list  (list  lo0 (+ o0 1) le0 (flip b0))   (list  lo1 (- o1 1) le1 (flip b1)))))
+      (:Llevar-Legumbre
+        (if (= 0 orilla-barca) 
+          (list  (list  lo0 o0 (- le0 1) (flip b0))   (list  lo1 o1 (+ le1 1) (flip b1))) 
+          (list  (list  lo0 o0 (+ le0 1) (flip b0))   (list  lo1 o1 (- le1 1) (flip b1)))))
+      (T "Error")
+    )))
 
 (defun expand (estado)
-"Obtiene todos los descendientes válidos de un estado, aplicando todos los operadores en *ops* en ese mismo órden"
-  (let (  (descendientes  nil)
-          (nuevo-estado  nil))
-
+  (let (  
+    (descendientes  nil)
+    (nuevo-estado  nil))
     (dolist  (op  *Ops*  descendientes) 
       (when (and  (valid-operator?  op  estado)           ;; se valida el resultado...
                   (valid-state?  (setq nuevo-estado (apply-operator op estado))))
         (setq  descendientes  (cons  (list nuevo-estado op) descendientes))))))
 
-
-(defun  remember-state?  (estado  lista-memoria)
-"Busca un estado en una lista de nodos que sirve como memoria de intentos previos
-  el estado tiene estructura:  [(<m0><c0><b0>) (<m1><c1><b1>)],
-  el nodo tiene estructura : [<Id> <estado> <id-ancestro> <operador> ]"  
+(defun  remember-state?  (estado  lista-memoria)  
   (cond 
     ((null  lista-memoria)  Nil)
     ((equal  estado  (second (first  lista-memoria)))  T)  ;;el estado es igual al que se encuentra en el nodo?
     (T  (remember-state?  estado  (rest  lista-memoria)))))
 
 (defun  filter-memories (lista-estados-y-ops) 
-"Filtra una lista de estados-y-operadores quitando aquellos elementos cuyo estado está en la memoria *memory*
-  la lista de estados y operadores tiene estructura: [(<estado> <op>) (<estado> <op>) ... ]"
   (cond ((null  lista-estados-y-ops)  Nil)
         ((remember-state? (first (first  lista-estados-y-ops)) *memory*)  ;; si se recuerda el primer elemento de la lista, filtrarlo...
           (filter-memories  (rest  lista-estados-y-ops)))
         (T  (cons  (first lista-estados-y-ops) (filter-memories  (rest  lista-estados-y-ops))))) )  ;; de lo contrario, incluirlo en la respuesta
 
 (defun extract-solution (nodo)
-"Rastrea en *memory* todos los descendientes de [nodo] hasta llegar al estado inicial"
   (labels (
     (locate-node  (id lista)       ;; función local que busca un nodo por Id  y si lo encuentra regresa el nodo completo
       (cond ((null  lista)  Nil)
@@ -125,23 +125,15 @@
         (setq  current  (locate-node  (third  current) *memory*))))  ;; y luego cambiar a su antecesor...
           *solucion*))
 
-(defun imprimirEstado (estado)
-  (let ((colores ()))
-    (loop for frog in estado 
-      if (rana-p frog) do (push (rana-color frog) colores) 
-      else do (push nil colores))
-      (reverse colores)))
-
 (defun  display-solution (lista-nodos)
-"Despliega la solución en forma conveniente y numerando los pasos"
   (format  t  "Solución con ~A  pasos:~%~%" (1- (length  lista-nodos)))
   (let ((nodo  nil))
     (dotimes  (i (length  lista-nodos))
       (setq  nodo  (nth  i  lista-nodos))
       (if  (= i 0)
-        (format t "Inicio en: ~A~%" (imprimirEstado (second  nodo)))  ;; a partir de este estado inicial
+        (format t "Inicio en: ~A~%" (second  nodo))  ;; a partir de este estado inicial
         ;;else
-        (format t "\(~2A\)  aplicando ~40A se llega a ~26A~%" i (fourth  nodo) (imprimirEstado (second  nodo)))))))  ;; imprimir el número de paso, operador y estado...
+        (format t "\(~2A\)  aplicando ~18A se llega a ~22A~%" i (fourth  nodo) (second  nodo)))))) ;; imprimir el número de paso, operador y estado...
 
 (defun reset-globals () 
 "Reinicia todas las variables globales para realizar una nueva búsqueda..."
@@ -152,9 +144,6 @@
      (setq  *solucion*  nil))
 
 (defun  blind-search (edo-inicial  edo-meta  metodo)
-"Realiza una búsqueda ciega, por el método especificado y desde un estado inicial hasta un estado meta
-    los métodos posibles son: :depth-first - búsqueda en profundidad
-                              :breath-first - búsqueda en anchura"
   (reset-globals)
   (let (
     (nodo nil)
