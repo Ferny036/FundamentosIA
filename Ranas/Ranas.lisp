@@ -36,7 +36,37 @@
 ;;; ( < Roca1 > < Roca2 > < Roca3 > < Roca4 > < Roca5 > < Roca6 > < Roca7 > )
 ;;;   < Roca# >: Valor de la Roca # (Rana ó NIL)
 
+(defparameter *nodos-creados* 0)      ;;; Indicador que cuenta la cantidad de nodos creados
+(defparameter *nodos-expandidos* 0)   ;;; Indicador que cuenta la cantidad de nodos que se expandieron
+(defparameter *long-max-frontera* 0)  ;;; Indicador que calcula el tamaño máximo de la frontera de búsqueda
+(defparameter *long-solucion* 0)      ;;; Indicador que calcula el tamaño de la solución del problema
+(defparameter *tiempo-inicial* NIL)   ;;; Indicador que considera el conteo real de ciclos de reloj antes de ejecutar el programa
+(defparameter *tiempo-final* NIL)     ;;; Indicador que considera el conteo real de ciclos de reloj despues de ejecutar el programa
+
 (defstruct rana color)      ;;; Estructura Rana a utilizar donde la llave es el color
+
+;;; Estado inicial del problema
+(defparameter *estado-inicial*  
+  (list
+    (make-rana :color :cafe)
+    (make-rana :color :cafe)
+    (make-rana :color :cafe)
+    NIL
+    (make-rana :color :verde)
+    (make-rana :color :verde)
+    (make-rana :color :verde)))
+
+;;; Estado meta del problema
+(defparameter *estado-final*  
+  (list
+    (make-rana :color :verde)
+    (make-rana :color :verde)
+    (make-rana :color :verde)
+    NIL
+    (make-rana :color :cafe)
+    (make-rana :color :cafe)
+    (make-rana :color :cafe)))
+
 (defparameter *open* '())   ;;; Frontera de Busqueda
 (defparameter *memory* '()) ;;; Memoria de intentos previos
 
@@ -84,6 +114,7 @@
 |#
 (defun create-node (estado op)
   (incf *id*)
+  (incf *nodos-creados*)
   (list *id* estado *current-ancestor* (first op)))
 
 #| Funcion. Insert to open
@@ -239,7 +270,8 @@
       (loop  while  (not (null  current))  do                        
         (push  current  *solucion*)
         (setq  current  (locate-node  (third  current) *memory*))))
-          *solucion*))
+  (setf *long-solucion* (length *solucion*))      
+  *solucion*))
 
 #| Funcion. Transform state
   
@@ -262,7 +294,6 @@
   @param lista-nodos - Lista de nodos pertenecientes a la solucion del problema.
 |#
 (defun  display-solution (lista-nodos)
-"Despliega la solución en forma conveniente y numerando los pasos"
   (format  t  "Solución con ~A  pasos:~%~%" (1- (length  lista-nodos)))
   (let ((nodo  nil))
     (dotimes  (i (length  lista-nodos))
@@ -278,11 +309,15 @@
 
 |#
 (defun reset-globals () 
-     (setq  *open*  nil)
-     (setq  *memory*  nil)
-     (setq  *id*  0)
-     (setq  *current-ancestor*  nil)
-     (setq  *solucion*  nil))
+    (setq  *open*  nil)
+    (setq  *memory*  nil)
+    (setq  *id*  0)
+    (setq  *current-ancestor*  nil)
+    (setq  *solucion*  nil)
+    (setf *nodos-creados* 0)
+    (setf *nodos-expandidos* 0)
+    (setf *long-solucion* 0)
+    (setf *long-max-frontera* 0))
 
 #| Funcion. Blind search
   
@@ -316,8 +351,51 @@
           (display-solution  (extract-solution nodo))
           (setq  meta-encontrada  T))
         (t 
+          (incf  *nodos-expandidos*)
           (setq  *current-ancestor*  (first  nodo))
           (setq  sucesores  (expand estado))
+          (setf  *long-max-frontera* (if (> (length *open*) *long-max-frontera*) (length *open*) *long-max-frontera*))
           (setq  sucesores  (filter-memories  sucesores))
           (loop for  element  in  sucesores  do
             (insert-to-open  (first element)  (second element)  metodo)))))))
+
+#| Funcion. Calcular Tiempo
+  
+  Utiliza los parametros globales para determinar el tiempo total de ejecucion del programa:  
+
+  @return Calculo del tiempo en segundos de ejecucion del programa.
+|#
+(defun calcularTiempo ()
+  (/ (- *tiempo-final* *tiempo-inicial*) internal-time-units-per-second))
+
+#| Funcion. Imprimir Indicadores
+  
+  Imprime los cinco indicadores requeridos:
+    * Nodos Creados
+    * Nodos Expandidos
+    * Longitud maxima de la frontera de busqueda
+    * Longitud de la solucion
+    * Tiempo para encontrar la solucion
+|#
+(defun imprimirIndicadores ()
+  (format  t  "~%~%Nodos Creados: ~A~%Nodos Expandidos: ~A~%Longitud máxima de la Frontera de búsqueda: ~A~%Longitud de la solución: ~A~%Tiempo para encontrar la solución: ~A seg.~%" 
+    *nodos-creados*
+    *nodos-expandidos*
+    *long-max-frontera*
+    *long-solucion*
+    (float (calcularTiempo))))
+
+#| Funcion. Main
+  
+  Funcion principal del archivo, llama a la funcion de busqueda ciega mientras genera los indicadores globales
+  
+  @param metodo - Indica el metodo a utilizar, desde un estado inicial hasta un estado meta, 
+  los métodos posibles son:  
+    * :depth-first - Búsqueda en profundidad
+    * :breath-first - Búsqueda en anchura
+|#
+(defun main (metodo)
+  (setf *tiempo-inicial* (get-internal-real-time))
+  (blind-search *estado-inicial*  *estado-final*  metodo)
+  (setf *tiempo-final* (get-internal-real-time))
+  (imprimirIndicadores))
